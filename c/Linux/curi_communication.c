@@ -80,3 +80,14 @@ void communication_close()
 	close(communication_server);
 	close(communication_client);
 }
+
+void communication_pack(int state, hduVector3Dd position, hduVector3Dd force)
+{
+	sprintf_s(communication_set_data, MAX_REMOTER_DATA_SIZE, "#%1d,%8.3lf,%8.3lf,%8.3lf,%8.3f,%8.3lf,%8.3lf#",
+		state, position[0], position[1], position[2], force[0], force[1], force[2]);
+}
+
+void communication_unpack(hduVector3Dd position)
+{
+	sscanf_s(communication_get_data, "%lf,%lf,%lf", &position[0], &position[1], &position[2]);
+}
