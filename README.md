@@ -22,7 +22,7 @@ communication_receive()
 ```
 + Non-blocking for receive data by using **communication_get** function
 ```
-communication_get(wait_time_in_us)
+communication_get(waiting_time_in_us)
 ```
 ### 3. Close the communication
 + Using **communication_init** function to close the communication
