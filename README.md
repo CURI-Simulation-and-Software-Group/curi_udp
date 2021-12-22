@@ -1,4 +1,9 @@
 # curi_udp
+This is a general api for udp communication in c and python
+
+Supported OS:
++ python: Linux & Windows
++ c code: Linux & Windows
 
 ## How to use
 ### 1. Initial the communication
