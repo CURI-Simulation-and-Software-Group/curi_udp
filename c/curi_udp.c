@@ -1,6 +1,34 @@
+/********** ********** ********** ********** ********** ********** **********
+ *                                 ( 0-0 )                                  *
+ *                            (" \/       \/ ")                             *
+ ********** ********** ********** ********** ********** ********** **********
+ * Copyright (C) 2018 - 2022 CURI & HKCLR                                   *
+ * File name   : curi_udp.c                                                 *
+ * Author      : CHEN Wei                                                   *
+ * Version     : 1.0.0                                                      *
+ * Date        : 2022-04-29                                                 *
+ * Description : Udp communication.                                         *
+ * Others      : None                                                       *
+ * History     : 2022-04-29 1st version.                                    *
+ ********** ********** ********** ********** ********** ********** **********
+ *                              (            )                              *
+ *                               \ __ /\ __ /                               *
+ ********** ********** ********** ********** ********** ********** **********/
 
 #include "curi_udp.h"
 
+/*
+ * function: udp_init
+ *     udp communication initialization
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ *     local_ip[char *]: the local node ip
+ *     local_port[int]: the local node port
+ *     remote_ip[char *]: the remote node ip
+ *     remote_port[int]: the remote node port
+ * output:
+ *     state[int]: success return 0
+ */
 int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int remote_port)
 {
 #ifdef WIN32
@@ -37,21 +65,30 @@ int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int
 		return 1;
 	}
 #ifdef WIN32
-	int nRecvBuf = MAX_REMOTER_DATA_SIZE;//设置为1K
+	int nRecvBuf = MAX_REMOTER_DATA_SIZE;
 	if (0 != setsockopt(p->server_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int)))
 	{
-		return FALSE;
+		return 2;
 	}
-	if (0 != setsockopt(cp->client_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int)))
+	if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int)))
 	{
-		return FALSE;
+		return 3;
 	}
 #endif
-	FD_ZERO(&rset);
+	FD_ZERO(&(p->rset));
 
 	return 0;
 }
 
+/*
+ * function: udp_select
+ *     udp communication selection to test if there are some data at the port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ *     usec[int]: wait data time in us
+ * output:
+ *     [int]: the data recieved
+ */
 int udp_select(udp_node* p, int usec)
 {
 	FD_SET(p->server_fd, &(p->rset));
@@ -69,24 +106,56 @@ int udp_select(udp_node* p, int usec)
 	return p->recieve_size;
 }
 
+/*
+ * function: udp_send
+ *     udp communication send data to the remote port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_send(udp_node* p)
 {
 	sendto(p->client_fd, p->send_buffer, strlen(p->send_buffer), 0,
 		(const struct sockaddr_in*)&(p->client_addr), sizeof(p->client_addr));
 }
 
+/*
+ * function: udp_receive
+ *     udp communication recieve data from the local port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_receive(udp_node* p)
 {
 	memset(p->recieve_buffer, 0, sizeof(p->recieve_buffer));
 	p->recieve_size = recv(p->server_fd, p->recieve_buffer, MAX_REMOTER_DATA_SIZE, 0);
 }
 
+/*
+ * function: udp_print
+ *     udp communication print the recieve data from the local port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_print(udp_node* p)
 {
 	p->recieve_buffer[p->recieve_size] = 0;
 	puts(p->recieve_buffer);
 }
 
+/*
+ * function: udp_close
+ *     udp communication close the port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_close(udp_node* p)
 {
 #ifdef WIN32

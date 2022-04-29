@@ -1,14 +1,32 @@
+/********** ********** ********** ********** ********** ********** **********
+ *                                 ( 0-0 )                                  *
+ *                            (" \/       \/ ")                             *
+ ********** ********** ********** ********** ********** ********** **********
+ * Copyright (C) 2018 - 2022 CURI & HKCLR                                   *
+ * File name   : curi_udp.h                                                 *
+ * Author      : CHEN Wei                                                   *
+ * Version     : 1.0.0                                                      *
+ * Date        : 2022-04-29                                                 *
+ * Description : Udp communication.                                         *
+ * Others      : None                                                       *
+ * History     : 2022-04-29 1st version.                                    *
+ ********** ********** ********** ********** ********** ********** **********
+ *                              (            )                              *
+ *                               \ __ /\ __ /                               *
+ ********** ********** ********** ********** ********** ********** **********/
+
 #ifndef CURI_UDP_H
+#define CURI_UDP_H
 
 #ifdef WIN32
+	#include <Winsock2.h>
+	#pragma comment(lib, "WS2_32.lib")
+#else
 	#include <arpa/inet.h> 
 	#include <netinet/in.h> 
 	#include <sys/socket.h> 
 	#include <sys/types.h> 
 	#include <stdint.h>
-#else
-	#include <Winsock2.h>
-	#pragma comment(lib, "WS2_32.lib")
 #endif
 #include <stdio.h> 
 #include <stdlib.h> 
@@ -31,16 +49,69 @@ typedef struct _udp_node
 	fd_set rset;
 }udp_node;
 
+/*
+ * function: udp_init
+ *     udp communication initialization
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ *     local_ip[char *]: the local node ip
+ *     local_port[int]: the local node port
+ *     remote_ip[char *]: the remote node ip
+ *     remote_port[int]: the remote node port
+ * output:
+ *     state[bool]: success return true
+ */
 int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int remote_port);
 
+/*
+ * function: udp_select
+ *     udp communication selection to test if there are some data at the port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ *     usec[int]: wait data time in us
+ * output:
+ *     [int]: the data recieved
+ */
 int udp_select(udp_node* p, int usec);
 
+/*
+ * function: udp_send
+ *     udp communication send data to the remote port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_send(udp_node* p);
 
+/*
+ * function: udp_receive
+ *     udp communication recieve data from the local port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_receive(udp_node* p);
 
+/*
+ * function: udp_print
+ *     udp communication print the recieve data from the local port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_print(udp_node* p);
 
+/*
+ * function: udp_close
+ *     udp communication close the port
+ * input:
+ *     p[udp_node *]: the udp_node structure
+ * output:
+ *     [void]
+ */
 void udp_close(udp_node* p);
 
 #endif
