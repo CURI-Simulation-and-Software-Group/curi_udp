@@ -23,13 +23,12 @@
  * input:
  *     p[udp_node *]: the udp_node structure
  *     local_ip[char *]: the local node ip
- *     local_port[int]: the local node port
- *     remote_ip[char *]: the remote node ip
- *     remote_port[int]: the remote node port
+ *     send_port[int]: data send port
+ *     recieve_port[int]: recieve command port
  * output:
  *     state[int]: success return 0
  */
-int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int remote_port)
+int udp_init(udp_node* p, char local_ip[], int send_port, int recieve_port)
 {
 #ifdef WIN32
 	WSADATA wsaData;
@@ -47,19 +46,19 @@ int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int
 	// create UDP socket 
 	p->server_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	p->server_addr.sin_addr.s_addr = inet_addr(local_ip);
-	p->server_addr.sin_port = htons(local_port);
+	p->server_addr.sin_port = htons(send_port);
 	p->server_addr.sin_family = AF_INET;
 
 	p->client_fd = socket(AF_INET, SOCK_DGRAM, 0);
-	p->client_addr.sin_addr.s_addr = inet_addr(remote_ip);
-	p->client_addr.sin_port = htons(remote_port);
+	p->client_addr.sin_addr.s_addr = inet_addr(local_ip);
+	p->client_addr.sin_port = htons(recieve_port);
 	p->client_addr.sin_family = AF_INET;
 
 	// bind server address to socket descriptor 
 #ifdef WIN32
-	if (bind(p->server_fd, (struct sockaddr_in *)&(p->server_addr), sizeof(p->server_addr)) == -1) {
-#else
 	if (bind(p->server_fd, (SOCKADDR*)&(p->server_addr)), sizeof(p->server_addr)) == -1) {
+#else
+	if (bind(p->server_fd, (struct sockaddr_in *)&(p->server_addr), sizeof(p->server_addr)) == -1) {
 #endif
 		perror("bind error.");
 		return 1;
@@ -122,7 +121,7 @@ void udp_send(udp_node* p)
 
 /*
  * function: udp_receive
- *     udp communication recieve data from the local port
+ *     udp communication receive data from the local port
  * input:
  *     p[udp_node *]: the udp_node structure
  * output:

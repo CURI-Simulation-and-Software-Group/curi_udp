@@ -55,13 +55,12 @@ typedef struct _udp_node
  * input:
  *     p[udp_node *]: the udp_node structure
  *     local_ip[char *]: the local node ip
- *     local_port[int]: the local node port
- *     remote_ip[char *]: the remote node ip
- *     remote_port[int]: the remote node port
+ *     send_port[int]: data send port
+ *     recieve_port[int]: recieve command port
  * output:
- *     state[bool]: success return true
+ *     state[int]: success return 0
  */
-int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int remote_port);
+int udp_init(udp_node* p, char local_ip[], int send_port, int recieve_port);
 
 /*
  * function: udp_select
@@ -86,7 +85,7 @@ void udp_send(udp_node* p);
 
 /*
  * function: udp_receive
- *     udp communication recieve data from the local port
+ *     udp communication receive data from the local port
  * input:
  *     p[udp_node *]: the udp_node structure
  * output:
