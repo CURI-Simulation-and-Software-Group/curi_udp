@@ -1,7 +1,7 @@
 import sys
 import select
 import socket
-class curi_communication_socket:
+class curi_communication_udp:
     name = 'udp'
     def __init__(self, joint_size, selfIP, selfPort, targetIP, targetPort):
         self.JointSize = joint_size
@@ -42,7 +42,7 @@ class curi_communication_socket:
 import time
 if __name__ == '__main__':
     try:
-        CS = curi_socket("", 10086)
+        CS = curi_communication_udp:("", 10086)
         CS.open()
         for i in range(10):
             print('i', CS.recieve())
