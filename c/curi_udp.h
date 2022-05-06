@@ -32,7 +32,7 @@
 #include <stdlib.h> 
 #include <string.h> 
 
-#define MAX_REMOTER_DATA_SIZE 256
+#define MAX_REMOTER_DATA_SIZE 1024
 
 typedef struct _udp_node
 {

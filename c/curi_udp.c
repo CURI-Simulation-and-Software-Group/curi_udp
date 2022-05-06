@@ -65,12 +65,12 @@ int udp_init(udp_node* p, char local_ip[], int send_port, int recieve_port)
 	}
 
 	// set the buffer size
-	int nRecvBuf = MAX_REMOTER_DATA_SIZE;
-	if (0 != setsockopt(p->server_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int)))
+	int buffer_size = MAX_REMOTER_DATA_SIZE;
+	if (0 != setsockopt(p->server_fd, SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(int)))
 		return -2;
-	else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int)))
+	else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&buffer_size, sizeof(int)))
 		return -3;
-	//else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_REUSEADDR, 1, sizeof(int)))
+	//else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_REUSEADDR, 0, sizeof(int)))
 	//	return -4;
 
 	FD_ZERO(&(p->rset));
@@ -96,7 +96,6 @@ int udp_select(udp_node* p, int usec)
 	t.tv_usec = usec;
 	int nready = select(p->server_fd + 1, &(p->rset), NULL, NULL, &t);
 	if (FD_ISSET(p->server_fd, &(p->rset))) {
-		memset(p->recieve_buffer, 0, sizeof(p->recieve_buffer));
 		p->recieve_size = recv(p->server_fd, p->recieve_buffer, MAX_REMOTER_DATA_SIZE, 0);
 	} else {
 		p->recieve_size = 0;
@@ -128,7 +127,6 @@ void udp_send(udp_node* p)
  */
 void udp_receive(udp_node* p)
 {
-	memset(p->recieve_buffer, 0, sizeof(p->recieve_buffer));
 	p->recieve_size = recv(p->server_fd, p->recieve_buffer, MAX_REMOTER_DATA_SIZE, 0);
 }
 

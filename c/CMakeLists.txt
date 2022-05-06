@@ -15,16 +15,26 @@ endif()
 
 if (WIN32)
     message("OS: Windows")
-    add_executable(${PROJECT_NAME}
+    add_executable(local
         ${CMAKE_SOURCE_DIR}/curi_udp.h
         ${CMAKE_SOURCE_DIR}/curi_udp.c
-        ${CMAKE_SOURCE_DIR}/main.c
+        ${CMAKE_SOURCE_DIR}/local.c
+    )
+    add_executable(remote
+        ${CMAKE_SOURCE_DIR}/curi_udp.h
+        ${CMAKE_SOURCE_DIR}/curi_udp.c
+        ${CMAKE_SOURCE_DIR}/remote.c
     )
 elseif (UNIX AND NOT APPLE)
     message("OS: Linux")
-    add_executable(${PROJECT_NAME}
+    add_executable(local
         ${CMAKE_SOURCE_DIR}/curi_udp.h
         ${CMAKE_SOURCE_DIR}/curi_udp.c
-        ${CMAKE_SOURCE_DIR}/main.c
+        ${CMAKE_SOURCE_DIR}/local.c
+    )
+    add_executable(remote
+        ${CMAKE_SOURCE_DIR}/curi_udp.h
+        ${CMAKE_SOURCE_DIR}/curi_udp.c
+        ${CMAKE_SOURCE_DIR}/remote.c
     )
 endif()
