@@ -63,15 +63,16 @@ int udp_init(udp_node* p, char local_ip[], int send_port, int recieve_port)
 		perror("bind error.");
 		return -1;
 	}
-#ifdef WIN32
+
+	// set the buffer size
 	int nRecvBuf = MAX_REMOTER_DATA_SIZE;
 	if (0 != setsockopt(p->server_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int)))
 		return -2;
 	else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int)))
 		return -3;
-	else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_REUSEADDR, 1))
-		return -4;
-#endif
+	//else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_REUSEADDR, 1, sizeof(int)))
+	//	return -4;
+
 	FD_ZERO(&(p->rset));
 
 	return 0;
