@@ -49,6 +49,11 @@ typedef struct _udp_node
 	fd_set rset;
 }udp_node;
 
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
+
 /*
  * function: udp_init
  *     udp communication initialization
@@ -113,4 +118,7 @@ void udp_print(udp_node* p);
  */
 void udp_close(udp_node* p);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
