@@ -28,7 +28,7 @@
  * output:
  *     state[int]: success return 0
  */
-int udp_init(udp_node* p, char local_ip[], int send_port, int recieve_port)
+int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int recieve_port)
 {
 #ifdef WIN32
 	WSADATA wsaData;
@@ -50,7 +50,7 @@ int udp_init(udp_node* p, char local_ip[], int send_port, int recieve_port)
 	p->server_addr.sin_family = AF_INET;
 
 	p->client_fd = socket(AF_INET, SOCK_DGRAM, 0);
-	p->client_addr.sin_addr.s_addr = inet_addr(local_ip);
+	p->client_addr.sin_addr.s_addr = inet_addr(remote_ip);
 	p->client_addr.sin_port = htons(recieve_port);
 	p->client_addr.sin_family = AF_INET;
 

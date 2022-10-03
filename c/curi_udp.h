@@ -65,7 +65,7 @@ extern "C"
  * output:
  *     state[int]: success return 0
  */
-int udp_init(udp_node* p, char local_ip[], int send_port, int recieve_port);
+int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int recieve_port);
 
 /*
  * function: udp_select
