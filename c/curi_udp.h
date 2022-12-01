@@ -47,6 +47,7 @@ typedef struct _udp_node
 	struct sockaddr_in server_addr;
 	struct sockaddr_in client_addr;
 	fd_set rset;
+    uint8_t lock;
 }udp_node;
 
 #ifdef __cplusplus
@@ -54,6 +55,7 @@ extern "C"
 {
 #endif
 
+void lock_udp_node(udp_node* p, int lock);
 /*
  * function: udp_init
  *     udp communication initialization
