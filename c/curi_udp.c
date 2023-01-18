@@ -17,15 +17,6 @@
 
 #include "curi_udp.h"
 
-void lock_udp_node(udp_node* p, int lock){
-    if (lock){
-        while (p->lock){
-            sleep_period(10);
-        }
-    }
-    p->lock = lock;
-}
-
 /*
  * function: udp_init
  *     udp communication initialization
@@ -105,6 +96,7 @@ int udp_select(udp_node* p, int usec)
 	t.tv_usec = usec;
 	int nready = select(p->server_fd + 1, &(p->rset), NULL, NULL, &t);
 	if (FD_ISSET(p->server_fd, &(p->rset))) {
+		memset(p->recieve_buffer, 0, sizeof(p->recieve_buffer));
 		p->recieve_size = recv(p->server_fd, p->recieve_buffer, MAX_REMOTER_DATA_SIZE, 0);
 	} else {
 		p->recieve_size = 0;
@@ -122,13 +114,12 @@ int udp_select(udp_node* p, int usec)
  */
 void udp_send(udp_node* p)
 {
-	char send_buffer[MAX_REMOTER_DATA_SIZE];
 	lock_udp_node(p, 1);
+	char send_buffer[MAX_REMOTER_DATA_SIZE];
 	strncpy(send_buffer, p->send_buffer, strlen(p->send_buffer));
-	lock_udp_node(p, 0);
-
 	sendto(p->client_fd, send_buffer, strlen(send_buffer), 0,
 		(const struct sockaddr_in*)&(p->client_addr), sizeof(p->client_addr));
+	lock_udp_node(p, 0);
 }
 
 /*

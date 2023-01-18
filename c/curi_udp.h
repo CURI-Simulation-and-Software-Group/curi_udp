@@ -55,7 +55,13 @@ extern "C"
 {
 #endif
 
-void lock_udp_node(udp_node* p, int lock);
+#define lock_udp_node(udp_node_p, lock_state) \
+    if (lock_state) { \ 
+		int udp_lock_cnts = 0; \
+		while (udp_node_p->lock && udp_lock_cnts < 50) { udp_lock_cnts ++; sleep_period(10); } \
+		if (udp_lock_cnts >= 50) return; \
+	} udp_node_p->lock = lock_state; 
+
 /*
  * function: udp_init
  *     udp communication initialization
