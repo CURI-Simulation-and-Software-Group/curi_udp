@@ -42,7 +42,7 @@ int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int 
 		return -1;
 	}
 #endif 
-
+    p->lock = 0;
 	// create UDP socket 
 	p->server_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	p->server_addr.sin_addr.s_addr = inet_addr(local_ip);
