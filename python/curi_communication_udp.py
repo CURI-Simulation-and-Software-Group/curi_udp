@@ -3,11 +3,10 @@ import select
 import socket
 class curi_communication_udp:
     name = 'udp'
-    def __init__(self, joint_size, selfIP, selfPort, targetIP, targetPort):
-        self.JointSize = joint_size
-        self.self_IP = selfIP
-        self.self_Port = selfPort
-        self.target_Address = (targetIP, targetPort)
+    def __init__(self, receiveIP, receivePort, sendIP, sendPort):
+        self.self_IP = receiveIP
+        self.self_Port = receivePort
+        self.target_Address = (sendIP, sendPort)
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
         return
