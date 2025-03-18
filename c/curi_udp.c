@@ -114,12 +114,12 @@ int udp_select(udp_node* p, int usec)
  */
 void udp_send(udp_node* p)
 {
-	lock_udp_node(p, 1);
+	// lock_udp_node(p, 1);
 	char send_buffer[MAX_REMOTER_DATA_SIZE];
 	strncpy(send_buffer, p->send_buffer, strlen(p->send_buffer));
 	sendto(p->client_fd, send_buffer, strlen(send_buffer), 0,
 		(const struct sockaddr_in*)&(p->client_addr), sizeof(p->client_addr));
-	lock_udp_node(p, 0);
+	// lock_udp_node(p, 0);
 }
 
 /*
