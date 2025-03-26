@@ -1,8 +1,7 @@
 import select
 import socket
-import traceback
 
-class curi_communication_udp:
+class UdpSocket:
     name = 'udp'
     def __init__(self, local_ip, local_port, remote_ip, remote_port):
         self._self_ip = local_ip

@@ -2,7 +2,7 @@ import sys
 import signal
 from functools import partial
 import time
-from curi_communication_udp import curi_communication_udp
+from udp_socket import UdpSocket
 
 def signal_handler(udp, sig, frame):
     print('You pressed Ctrl+C!')
@@ -12,7 +12,7 @@ def signal_handler(udp, sig, frame):
 if __name__ == '__main__':
     local_ip, local_port = "127.0.0.1", 10086
     remote_ip, remote_port = "127.0.0.1", 10085
-    udp = curi_communication_udp(local_ip, local_port, remote_ip, remote_port)
+    udp = UdpSocket(local_ip, local_port, remote_ip, remote_port)
     signal.signal(signal.SIGINT,partial(signal_handler, udp))
     udp.open()
     for i in range(10000):
