@@ -1,52 +1,40 @@
-import sys
 import select
 import socket
+import traceback
+
 class curi_communication_udp:
     name = 'udp'
-    def __init__(self, receiveIP, receivePort, sendIP, sendPort):
-        self.self_IP = receiveIP
-        self.self_Port = receivePort
-        self.target_Address = (sendIP, sendPort)
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
+    def __init__(self, local_ip, local_port, remote_ip, remote_port):
+        self._self_ip = local_ip
+        self._self_port = local_port
+        self._target_address = (remote_ip, remote_port)
+        self._rx_buffer_size = 4096
+        self._rx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._rx.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, self._rx_buffer_size)
+        self._tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return
     
     def open(self):
-        # self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.s.bind((self.self_IP, self.self_Port))
+        self._rx.bind((self._self_ip, self._self_port))
+        self._tx.connect(self._target_address)
         print('open socket')
 
     def close(self):
+        self._tx.close()
+        self._rx.close()
         print('close socket')
-        self.s.close()
 
-    def send(self, massage):
-        self.s.sendto(massage.encode("utf-8"), self.target_Address)
+    def send(self, message):
+        try:
+            self._tx.send(message.encode("utf-8"))
+        except ConnectionRefusedError:
+            # print("Connection refused. Client may not be available.")
+            return
         
-    def recieve(self, dt = 0.001): # waiting time
-        readable = select.select([self.s], [], [], dt)[0]
+    def receive(self, dt = 0.001): # waiting time
+        readable = select.select([self._rx], [], [], dt)[0]
         buf = ""
         if readable:
             for a in readable:
-                buf = str(a.recvfrom(256)[0])
+                buf = a.recvfrom(self._rx_buffer_size)[0].decode("utf-8")
         return buf
-
-    def set_start(self):
-        self.send("start")
-
-    def set_stop(self):
-        self.send("stop")
-
-'''
-import time
-if __name__ == '__main__':
-    try:
-        CS = curi_communication_udp:("", 10086)
-        CS.open()
-        for i in range(10):
-            print('i', CS.recieve())
-            time.sleep(0.05)
-    except:
-        print('exit')
-    CS.close()
-'''
