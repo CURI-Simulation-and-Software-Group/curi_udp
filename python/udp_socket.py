@@ -25,7 +25,7 @@ class UdpSocket:
 
     def send(self, message):
         try:
-            self._tx.send(message.encode("utf-8"))
+            self._tx.send(message.encode("ISO-8859-1"))
         except ConnectionRefusedError:
             # print("Connection refused. Client may not be available.")
             return
@@ -35,5 +35,6 @@ class UdpSocket:
         buf = ""
         if readable:
             for a in readable:
-                buf = a.recvfrom(self._rx_buffer_size)[0].decode("utf-8")
+                # buf = a.recvfrom(self._rx_buffer_size)[0].decode("utf-8")
+                buf = a.recvfrom(self._rx_buffer_size)[0].decode("ISO-8859-1")
         return buf
