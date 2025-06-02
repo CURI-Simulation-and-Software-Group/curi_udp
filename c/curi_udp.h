@@ -32,14 +32,16 @@
 #include <stdlib.h> 
 #include <string.h> 
 
-#define MAX_REMOTER_DATA_SIZE 2048
+#ifndef UDP_MAX_BUFFER_SIZE
+	#define UDP_MAX_BUFFER_SIZE 3100
+#endif
 
 typedef struct _udp_node
 {
 	int CURI_SEND_PORT;
 	int CURI_RECIVE_PORT;
-	char recieve_buffer[MAX_REMOTER_DATA_SIZE];
-	char send_buffer[MAX_REMOTER_DATA_SIZE];
+	char recieve_buffer[UDP_MAX_BUFFER_SIZE];
+	char send_buffer[UDP_MAX_BUFFER_SIZE];
 	int recieve_size;
 	int send_size;
 	int server_fd;
