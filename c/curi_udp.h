@@ -32,17 +32,13 @@
 #include <stdlib.h> 
 #include <string.h> 
 
-#ifndef UDP_MAX_BUFFER_SIZE
-	#define UDP_MAX_BUFFER_SIZE 3100
-#endif
-
 typedef struct _udp_node
 {
 	int CURI_SEND_PORT;
 	int CURI_RECIVE_PORT;
-	char recieve_buffer[UDP_MAX_BUFFER_SIZE];
-	char send_buffer[UDP_MAX_BUFFER_SIZE];
-	int recieve_size;
+	char* receive_buffer;
+	char* send_buffer;
+	int receive_size;
 	int send_size;
 	int server_fd;
 	int client_fd;
@@ -70,12 +66,12 @@ extern "C"
  * input:
  *     p[udp_node *]: the udp_node structure
  *     local_ip[char *]: the local node ip
- *     send_port[int]: data send port
- *     recieve_port[int]: recieve command port
+ *     local_port[int]: data send port
+ *     remote_port[int]: receive command port
  * output:
  *     state[int]: success return 0
  */
-int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int recieve_port);
+int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int remote_port, int buffer_size);
 
 /*
  * function: udp_select
@@ -84,9 +80,9 @@ int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int 
  *     p[udp_node *]: the udp_node structure
  *     usec[int]: wait data time in us
  * output:
- *     [int]: the data recieved
+ *     [int]: the data received
  */
-int udp_select(udp_node* p, int usec);
+int udp_select(udp_node* p, int usec, int buffer_size);
 
 /*
  * function: udp_send
@@ -96,7 +92,7 @@ int udp_select(udp_node* p, int usec);
  * output:
  *     [void]
  */
-void udp_send(udp_node* p);
+void udp_send(udp_node* p, int buffer_size);
 
 /*
  * function: udp_receive
@@ -106,11 +102,11 @@ void udp_send(udp_node* p);
  * output:
  *     [void]
  */
-void udp_receive(udp_node* p);
+void udp_receive(udp_node* p, int buffer_size);
 
 /*
  * function: udp_print
- *     udp communication print the recieve data from the local port
+ *     udp communication print the receive data from the local port
  * input:
  *     p[udp_node *]: the udp_node structure
  * output:

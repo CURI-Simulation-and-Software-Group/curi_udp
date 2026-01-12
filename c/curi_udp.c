@@ -16,6 +16,7 @@
  ********** ********** ********** ********** ********** ********** **********/
 
 #include "curi_udp.h"
+#include <sys/time.h>   // defines struct timeval
 
 /*
  * function: udp_init
@@ -23,12 +24,12 @@
  * input:
  *     p[udp_node *]: the udp_node structure
  *     local_ip[char *]: the local node ip
- *     send_port[int]: data send port
- *     recieve_port[int]: recieve command port
+ *     local_port[int]: data send port
+ *     remote_port[int]: receive command port
  * output:
  *     state[int]: success return 0
  */
-int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int recieve_port)
+int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int remote_port, int buffer_size)
 {
 #ifdef WIN32
 	WSADATA wsaData;
@@ -46,12 +47,12 @@ int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int 
 	// create UDP socket 
 	p->server_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	p->server_addr.sin_addr.s_addr = inet_addr(local_ip);
-	p->server_addr.sin_port = htons(send_port);
+	p->server_addr.sin_port = htons(local_port);
 	p->server_addr.sin_family = AF_INET;
 
 	p->client_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	p->client_addr.sin_addr.s_addr = inet_addr(remote_ip);
-	p->client_addr.sin_port = htons(recieve_port);
+	p->client_addr.sin_port = htons(remote_port);
 	p->client_addr.sin_family = AF_INET;
 
 	// bind server address to socket descriptor 
@@ -65,11 +66,19 @@ int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int 
 	}
 
 	// set the buffer size
-	int buffer_size = UDP_MAX_BUFFER_SIZE;
+	p->receive_buffer = (char*)malloc(buffer_size);
+	p->send_buffer = (char*)malloc(buffer_size);
+	if (!p->receive_buffer || !p->send_buffer) {
+		free(p->receive_buffer); 
+		free(p->send_buffer); 
+		return -2; 
+	}
+
+	// set the buffer size for udp socket
 	if (0 != setsockopt(p->server_fd, SOL_SOCKET, SO_SNDBUF, (const char*)&buffer_size, sizeof(int)))
-		return -2;
-	else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&buffer_size, sizeof(int)))
 		return -3;
+	else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_RCVBUF, (const char*)&buffer_size, sizeof(int)))
+		return -4;
 	//else if (0 != setsockopt(p->client_fd, SOL_SOCKET, SO_REUSEADDR, 0, sizeof(int)))
 	//	return -4;
 
@@ -85,9 +94,9 @@ int udp_init(udp_node* p, char local_ip[], char remote_ip[], int send_port, int 
  *     p[udp_node *]: the udp_node structure
  *     usec[int]: wait data time in us
  * output:
- *     [int]: the data recieved
+ *     [int]: the data received
  */
-int udp_select(udp_node* p, int usec)
+int udp_select(udp_node* p, int usec, int buffer_size)
 {
 	FD_SET(p->server_fd, &(p->rset));
 	// select the ready descriptor 
@@ -96,12 +105,12 @@ int udp_select(udp_node* p, int usec)
 	t.tv_usec = usec;
 	int nready = select(p->server_fd + 1, &(p->rset), NULL, NULL, &t);
 	if (FD_ISSET(p->server_fd, &(p->rset))) {
-		memset(p->recieve_buffer, 0, sizeof(p->recieve_buffer));
-		p->recieve_size = recv(p->server_fd, p->recieve_buffer, UDP_MAX_BUFFER_SIZE, 0);
+		memset(p->receive_buffer, 0, buffer_size);
+		p->receive_size = recv(p->server_fd, p->receive_buffer, buffer_size, 0);
 	} else {
-		p->recieve_size = 0;
+		p->receive_size = 0;
 	}
-	return p->recieve_size;
+	return p->receive_size;
 }
 
 /*
@@ -112,10 +121,10 @@ int udp_select(udp_node* p, int usec)
  * output:
  *     [void]
  */
-void udp_send(udp_node* p)
+void udp_send(udp_node* p, int buffer_size)
 {
 	// lock_udp_node(p, 1);
-	char send_buffer[UDP_MAX_BUFFER_SIZE];
+	char send_buffer[buffer_size];
 	strncpy(send_buffer, p->send_buffer, strlen(p->send_buffer));
 	sendto(p->client_fd, send_buffer, strlen(send_buffer), 0,
 		(const struct sockaddr_in*)&(p->client_addr), sizeof(p->client_addr));
@@ -130,14 +139,14 @@ void udp_send(udp_node* p)
  * output:
  *     [void]
  */
-void udp_receive(udp_node* p)
+void udp_receive(udp_node* p, int buffer_size)
 {
-	p->recieve_size = recv(p->server_fd, p->recieve_buffer, UDP_MAX_BUFFER_SIZE, 0);
+	p->receive_size = recv(p->server_fd, p->receive_buffer, buffer_size, 0);
 }
 
 /*
  * function: udp_print
- *     udp communication print the recieve data from the local port
+ *     udp communication print the receive data from the local port
  * input:
  *     p[udp_node *]: the udp_node structure
  * output:
@@ -145,8 +154,8 @@ void udp_receive(udp_node* p)
  */
 void udp_print(udp_node* p)
 {
-	p->recieve_buffer[p->recieve_size] = 0;
-	puts(p->recieve_buffer);
+	p->receive_buffer[p->receive_size] = 0;
+	puts(p->receive_buffer);
 }
 
 /*
@@ -159,6 +168,10 @@ void udp_print(udp_node* p)
  */
 void udp_close(udp_node* p)
 {
+	free(p->receive_buffer);
+	free(p->send_buffer);
+	p->receive_buffer = NULL;
+	p->send_buffer = NULL;
 #ifdef WIN32
 	closesocket(p->server_fd);
 	closesocket(p->client_fd);
