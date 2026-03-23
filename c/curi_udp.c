@@ -126,8 +126,8 @@ void udp_send(udp_node* p, int buffer_size)
 	// lock_udp_node(p, 1);
 	char send_buffer[buffer_size];
 	strncpy(send_buffer, p->send_buffer, strlen(p->send_buffer));
-	sendto(p->client_fd, send_buffer, strlen(send_buffer), 0,
-		(const struct sockaddr_in*)&(p->client_addr), sizeof(p->client_addr));
+	sendto(p->client_fd, (struct sockaddr *)&(send_buffer), strlen(send_buffer), 0,
+		(const struct sockaddr *)&(p->client_addr), sizeof(p->client_addr));
 	// lock_udp_node(p, 0);
 }
 
