@@ -59,7 +59,7 @@ int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int
 #ifdef WIN32
 	if (bind(p->server_fd, (SOCKADDR*)&(p->server_addr)), sizeof(p->server_addr)) == -1) {
 #else
-	if (bind(p->server_fd, (struct sockaddr_in *)&(p->server_addr), sizeof(p->server_addr)) == -1) {
+	if (bind(p->server_fd, (const struct sockaddr *)&(p->server_addr), sizeof(p->server_addr)) == -1) {
 #endif
 		perror("bind error.");
 		return -1;
