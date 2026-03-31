@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 3.2.0)
 
 # Only call project() if this is the root project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    project(curi_udp)
+    project(curi_udp LANGUAGES C CXX)
 endif()
-
 
 ###################################Add library###########################################
 add_library(CURI_UDP_LIB
