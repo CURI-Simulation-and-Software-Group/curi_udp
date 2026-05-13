@@ -42,10 +42,10 @@ typedef struct _udp_node
 	char* send_buffer;
 	int receive_size;
 	int send_size;
-	int server_fd;
-	int client_fd;
-	struct sockaddr_in server_addr;
-	struct sockaddr_in client_addr;
+	int receive_fd;
+	int send_fd;
+	struct sockaddr_in receive_addr;
+	struct sockaddr_in send_addr;
 	fd_set rset;
     uint8_t lock;
 }udp_node;
@@ -55,18 +55,12 @@ extern "C"
 {
 #endif
 
-/*
- * function: udp_init
- *     udp communication initialization
- * input:
- *     p[udp_node *]: the udp_node structure
- *     local_ip[char *]: the local node ip
- *     local_port[int]: data send port
- *     remote_port[int]: receive command port
- * output:
- *     state[int]: success return 0
- */
-int udp_init(udp_node* p, char local_ip[], int local_port, char remote_ip[], int remote_port, int buffer_size);
+int udp_init(udp_node* p, char receive_ip[], int receive_port, char send_ip[], int send_port, int buffer_size);
+int udp_init1(udp_node* p, char receive_ip[], int receive_port, char send_ip[], int send_port, int buffer_size, int receive_fd);
+int udp_init_receive_fd(udp_node* p, char receive_ip[], int receive_port, int buffer_size);
+int udp_init_receive_fd1(udp_node* p, char receive_ip[], int receive_port, int buffer_size, int receive_fd);
+int udp_init_send_fd(udp_node* p, char send_ip[], int send_port, int buffer_size);
+
 
 /*
  * function: udp_select

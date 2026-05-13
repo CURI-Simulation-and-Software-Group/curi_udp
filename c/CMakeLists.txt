@@ -6,17 +6,21 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 endif()
 
 ###################################Add library###########################################
-add_library(CURI_UDP_LIB
+add_library(curi_udp 
     ${CMAKE_CURRENT_SOURCE_DIR}/curi_udp.c
 )
-target_include_directories(CURI_UDP_LIB PUBLIC 
+
+target_include_directories(curi_udp PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+# Modernized modern target aliases
+add_library(curi::udp ALIAS curi_udp)
 
 ###################################Generate Executable###################################
 #Generate Executable if this CMakeLists isn't a subdirectory 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    link_libraries(CURI_UDP_LIB)
+    link_libraries(curi::udp)
     add_executable(local
         ${CMAKE_CURRENT_SOURCE_DIR}/local.c
     )
