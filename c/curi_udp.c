@@ -19,7 +19,7 @@
 #include <sys/time.h>   // defines struct timeval
 
 
-int udp_init(udp_node* p, char receive_ip[], int receive_port, char send_ip[], int send_port, int buffer_size){
+int udp_init(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int buffer_size){
 	int ret = udp_init_receive_fd(p, receive_ip, receive_port, buffer_size);
 	if (ret != 0){
 		printf("Failed to initialize receive_fd, return code: %d\n", ret);
@@ -34,7 +34,7 @@ int udp_init(udp_node* p, char receive_ip[], int receive_port, char send_ip[], i
 	return 0;
 }
 
-int udp_init1(udp_node* p, char receive_ip[], int receive_port, char send_ip[], int send_port, int buffer_size, int receive_fd){
+int udp_init1(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int buffer_size, int receive_fd){
 	int ret = udp_init_receive_fd1(p, receive_ip, receive_port, buffer_size, receive_fd);
 	if (ret != 0){
 		printf("Failed to initialize receive_fd, return code: %d\n", ret);
@@ -49,12 +49,12 @@ int udp_init1(udp_node* p, char receive_ip[], int receive_port, char send_ip[], 
 	return 0;
 }
 
-int udp_init_receive_fd(udp_node* p, char receive_ip[], int receive_port, int buffer_size){
+int udp_init_receive_fd(udp_node* p, const char receive_ip[], int receive_port, int buffer_size){
 	int receive_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	udp_init_receive_fd1(p, receive_ip, receive_port, buffer_size, receive_fd);
 }
 
-int udp_init_receive_fd1(udp_node* p, char receive_ip[], int receive_port, int buffer_size, int receive_fd){
+int udp_init_receive_fd1(udp_node* p, const char receive_ip[], int receive_port, int buffer_size, int receive_fd){
 #ifdef WIN32
 	WSADATA wsaData;
 	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -100,7 +100,7 @@ int udp_init_receive_fd1(udp_node* p, char receive_ip[], int receive_port, int b
 	return 0;
 }
 
-int udp_init_send_fd(udp_node* p, char send_ip[], int send_port, int buffer_size){
+int udp_init_send_fd(udp_node* p, const char send_ip[], int send_port, int buffer_size){
 #ifdef WIN32
 	WSADATA wsaData;
 	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -169,12 +169,21 @@ int udp_select(udp_node* p, int usec, int buffer_size)
  */
 void udp_send(udp_node* p, int buffer_size)
 {
-	// lock_udp_node(p, 1);
-	char send_buffer[buffer_size];
-	strncpy(send_buffer, p->send_buffer, strlen(p->send_buffer));
-	sendto(p->send_fd, (struct sockaddr *)&(send_buffer), strlen(send_buffer), 0,
-		(const struct sockaddr *)&(p->send_addr), sizeof(p->send_addr));
-	// lock_udp_node(p, 0);
+    if (!p || p->send_fd < 0 || !p->send_buffer) {
+        return;
+    }
+    ssize_t send_bytes = sendto(
+        p->send_fd, 
+        p->send_buffer, 
+        buffer_size,
+        0,
+        (const struct sockaddr *)&(p->send_addr), 
+        sizeof(p->send_addr)
+    );
+	// const char send_buffer[buffer_size];
+	// strncpy(send_buffer, p->send_buffer, strlen(p->send_buffer));
+	// sendto(p->send_fd, (struct sockaddr *)&(send_buffer), strlen(send_buffer), 0,
+	// 	(const struct sockaddr *)&(p->send_addr), sizeof(p->send_addr));
 }
 
 /*

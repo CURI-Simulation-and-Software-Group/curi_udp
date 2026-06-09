@@ -55,11 +55,11 @@ extern "C"
 {
 #endif
 
-int udp_init(udp_node* p, char receive_ip[], int receive_port, char send_ip[], int send_port, int buffer_size);
-int udp_init1(udp_node* p, char receive_ip[], int receive_port, char send_ip[], int send_port, int buffer_size, int receive_fd);
-int udp_init_receive_fd(udp_node* p, char receive_ip[], int receive_port, int buffer_size);
-int udp_init_receive_fd1(udp_node* p, char receive_ip[], int receive_port, int buffer_size, int receive_fd);
-int udp_init_send_fd(udp_node* p, char send_ip[], int send_port, int buffer_size);
+int udp_init(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int buffer_size);
+int udp_init1(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int buffer_size, int receive_fd);
+int udp_init_receive_fd(udp_node* p, const char receive_ip[], int receive_port, int buffer_size);
+int udp_init_receive_fd1(udp_node* p, const char receive_ip[], int receive_port, int buffer_size, int receive_fd);
+int udp_init_send_fd(udp_node* p, const char send_ip[], int send_port, int buffer_size);
 
 
 /*
