@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2.0)
+cmake_minimum_required(VERSION 3.5)
 
 project(curi_udp LANGUAGES C)
 # # Only call project() if this is the root project
@@ -11,9 +11,13 @@ add_library(curi_udp
     ${CMAKE_CURRENT_SOURCE_DIR}/curi_udp.c
 )
 
-target_include_directories(curi_udp PUBLIC 
+target_include_directories(curi_udp PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+if(WIN32)
+    target_link_libraries(curi_udp PUBLIC ws2_32)
+endif()
 
 # Modernized modern target aliases
 add_library(curi::udp ALIAS curi_udp)
