@@ -38,20 +38,20 @@ long get_time_now()
 
 void udp_pack(udp_node* p, int index, long t)
 {
-	snprintf(p->send_buffer, UDP_BUFFER_SIZE, "%d#%ld", index, t);
+    snprintf((char*)p->send_buffer, UDP_BUFFER_SIZE, "%d#%ld", index, t);
 }
 
 void udp_unpack(udp_node* p, int *index, long *t)
 {
     if (p->receive_buffer[0] != '\0') {
-        sscanf(p->receive_buffer, "%d#%ld", index, t);
+        sscanf((char*)p->receive_buffer, "%d#%ld", index, t);
     }
 }
 
 int main()
 {
 	udp_node comunication1;
-	if (!udp_init(&comunication1, "127.0.0.1", 13332, "127.0.0.1", 13331, UDP_BUFFER_SIZE)) {
+	if (!udp_init(&comunication1, "127.0.0.1", 13332, "127.0.0.1", 13331, UDP_BUFFER_SIZE, UDP_BUFFER_SIZE)) {
 		printf("comunication1 create.\n");
 	}
 	else {

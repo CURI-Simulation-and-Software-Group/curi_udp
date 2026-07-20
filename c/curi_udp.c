@@ -77,7 +77,7 @@ static int curi_udp_socket_errno(void)
 #endif
 }
 
-int udp_init(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int buffer_size)
+int udp_init(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int receive_buffer_size, int send_buffer_size)
 {
 	if (!p) return -1;
 	p->receive_buffer = NULL;
@@ -87,30 +87,34 @@ int udp_init(udp_node* p, const char receive_ip[], int receive_port, const char 
 	if (curi_udp_wsa_startup() != 0) {
 		return -1;
 	}
+	
+	if (receive_buffer_size > 0) {
+	#if defined(_WIN32) || defined(WIN32)
+		SOCKET rx_fd = socket(AF_INET, SOCK_DGRAM, 0);
+	#else
+		int rx_fd = socket(AF_INET, SOCK_DGRAM, 0);
+	#endif
 
-#if defined(_WIN32) || defined(WIN32)
-	SOCKET rx_fd = socket(AF_INET, SOCK_DGRAM, 0);
-#else
-	int rx_fd = socket(AF_INET, SOCK_DGRAM, 0);
-#endif
-
-	int ret = udp_init_receive_fd1(p, receive_ip, receive_port, buffer_size, rx_fd);
-	if (ret != 0) {
-		printf("Failed to initialize receive_fd, return code: %d\n", ret);
-		udp_close(p);
-		return -1;
+		int ret = udp_init_receive_fd1(p, receive_ip, receive_port, receive_buffer_size, rx_fd);
+		if (ret != 0) {
+			printf("Failed to initialize receive_fd, return code: %d\n", ret);
+			udp_close(p);
+			return -1;
+		}
 	}
 
-	ret = udp_init_send_fd(p, send_ip, send_port, buffer_size);
-	if (ret != 0) {
-		printf("Failed to initialize send_fd, return code: %d\n", ret);
-		udp_close(p);
-		return -1;
+	if (send_buffer_size > 0) {
+		int ret = udp_init_send_fd(p, send_ip, send_port, send_buffer_size);
+		if (ret != 0) {
+			printf("Failed to initialize send_fd, return code: %d\n", ret);
+			udp_close(p);
+			return -1;
+		}
 	}
 	return 0;
 }
 
-int udp_init1(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int buffer_size, curi_socket_t receive_fd)
+int udp_init1(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int receive_buffer_size, int send_buffer_size, curi_socket_t receive_fd)
 {
 	if (!p) return -1;
 	p->receive_buffer = NULL;
@@ -122,19 +126,51 @@ int udp_init1(udp_node* p, const char receive_ip[], int receive_port, const char
 		return -1;
 	}
 
-	int ret = udp_init_receive_fd1(p, receive_ip, receive_port, buffer_size, receive_fd);
+	if (receive_buffer_size > 0) {
+		int ret = udp_init_receive_fd1(p, receive_ip, receive_port, receive_buffer_size, receive_fd);
+		if (ret != 0) {
+			printf("Failed to initialize receive_fd, return code: %d\n", ret);
+			udp_close(p);
+			return -1;
+		}
+	}
+	
+	if (send_buffer_size > 0) {
+		int ret = udp_init_send_fd(p, send_ip, send_port, send_buffer_size);
+		if (ret != 0) {
+			printf("Failed to initialize send_fd, return code: %d\n", ret);
+			udp_close(p);
+			return -1;
+		}
+	}	
+	return 0;
+}
+
+int udp_init_share_fd(udp_node* p, const char receive_ip[], int receive_port, const char send_ip[], int send_port, int receive_buffer_size, int send_buffer_size){
+	if (!p) return -1;
+	p->receive_buffer = NULL;
+	p->send_buffer = NULL;
+	p->receive_fd = CURI_UDP_INVALID_FD;
+	p->send_fd = CURI_UDP_INVALID_FD;
+
+	if (curi_udp_wsa_startup() != 0) {
+		return -1;
+	}
+
+	int ret = udp_init_send_fd(p, send_ip, send_port, send_buffer_size);
+	if (ret != 0) {
+		printf("Failed to initialize send_fd, return code: %d\n", ret);
+		udp_close(p);
+		return -1;
+	}
+	
+	ret = udp_init_receive_fd1(p, receive_ip, receive_port, receive_buffer_size, p->send_fd);
 	if (ret != 0) {
 		printf("Failed to initialize receive_fd, return code: %d\n", ret);
 		udp_close(p);
 		return -1;
 	}
 
-	ret = udp_init_send_fd(p, send_ip, send_port, buffer_size);
-	if (ret != 0) {
-		printf("Failed to initialize send_fd, return code: %d\n", ret);
-		udp_close(p);
-		return -1;
-	}
 	return 0;
 }
 
@@ -144,7 +180,6 @@ int udp_init_receive_fd(udp_node* p, const char receive_ip[], int receive_port, 
 	p->receive_buffer = NULL;
 	p->send_buffer = NULL;
 	p->receive_fd = CURI_UDP_INVALID_FD;
-	p->send_fd = CURI_UDP_INVALID_FD;
 
 	if (curi_udp_wsa_startup() != 0) {
 		return -1;
@@ -195,7 +230,7 @@ int udp_init_receive_fd1(udp_node* p, const char receive_ip[], int receive_port,
 		return -2;
 	}
 
-	p->receive_buffer = (char*)malloc(buffer_size);
+	p->receive_buffer = (uint8_t*)malloc(buffer_size);
 	if (!p->receive_buffer) {
 		return -3;
 	}
@@ -229,7 +264,7 @@ int udp_init_send_fd(udp_node* p, const char send_ip[], int send_port, int buffe
 		return -3;
 	}
 
-	p->send_buffer = (char*)malloc(buffer_size);
+	p->send_buffer = (uint8_t*)malloc(buffer_size);
 	if (!p->send_buffer) {
 		return -4;
 	}
@@ -259,6 +294,34 @@ int udp_select(udp_node* p, int usec, int buffer_size)
 	int nready = select((int)p->receive_fd + 1, &(p->rset), NULL, NULL, &t);
 	if (nready > 0 && FD_ISSET(p->receive_fd, &(p->rset))) {
 		p->receive_size = recv(p->receive_fd, p->receive_buffer, buffer_size, 0);
+		if (p->receive_size < 0) {
+			p->receive_size = 0;
+		}
+	} else {
+		p->receive_size = 0;
+	}
+	return p->receive_size;
+}
+
+int udp_select1(udp_node* p, int usec, int buffer_size, struct sockaddr_in* source_addr)
+{
+	if (!p || CURI_UDP_IS_INVALID_FD(p->receive_fd) || !p->receive_buffer) {
+		return 0;
+	}
+
+	FD_ZERO(&(p->rset));
+	FD_SET(p->receive_fd, &(p->rset));
+
+	struct timeval t;
+	t.tv_sec = usec / 1000000;
+	t.tv_usec = usec % 1000000;
+
+	socklen_t addr_len = sizeof(struct sockaddr_in); 
+
+	// Cast select fd parameter safely for platform variances
+	int nready = select((int)p->receive_fd + 1, &(p->rset), NULL, NULL, &t);
+	if (nready > 0 && FD_ISSET(p->receive_fd, &(p->rset))) {
+		p->receive_size = recvfrom(p->receive_fd, p->receive_buffer, buffer_size, 0, (struct sockaddr *)source_addr, &addr_len);
 		if (p->receive_size < 0) {
 			p->receive_size = 0;
 		}
