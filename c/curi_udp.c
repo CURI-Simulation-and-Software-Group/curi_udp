@@ -384,6 +384,10 @@ void udp_close(udp_node* p)
 
 	if (!CURI_UDP_IS_INVALID_FD(p->receive_fd)) {
 		CURI_UDP_CLOSE_FD(p->receive_fd);
+		/* udp_init_share_fd reuses the same socket for send+receive. */
+		if (p->send_fd == p->receive_fd) {
+			p->send_fd = CURI_UDP_INVALID_FD;
+		}
 		p->receive_fd = CURI_UDP_INVALID_FD;
 		curi_udp_wsa_cleanup();
 	}
