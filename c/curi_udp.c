@@ -26,6 +26,7 @@
 	#define CURI_UDP_IS_INVALID_FD(fd) ((fd) == INVALID_SOCKET)
 	#define CURI_UDP_FAILED(ret) ((ret) == SOCKET_ERROR)
 	#define CURI_UDP_CLOSE_FD(fd) closesocket(fd)
+	#include <mswsock.h>
 	static int g_wsa_usage_count = 0;
 #else
 	#ifndef CURI_UDP_INVALID_FD
@@ -74,6 +75,24 @@ static int curi_udp_socket_errno(void)
 	return WSAGetLastError();
 #else
 	return errno;
+#endif
+}
+
+static void curi_udp_disable_connreset(curi_socket_t fd)
+{
+#if defined(_WIN32) || defined(WIN32)
+	BOOL disable = FALSE;
+	DWORD bytes_returned = 0;
+	WSAIoctl(
+		fd,
+		SIO_UDP_CONNRESET,
+		&disable,
+		sizeof(disable),
+		NULL,
+		0,
+		&bytes_returned,
+		NULL,
+		NULL);
 #endif
 }
 
@@ -225,10 +244,21 @@ int udp_init_receive_fd1(udp_node* p, const char receive_ip[], int receive_port,
 		return -1;
 	}
 
+	{
+		int reuse = 1;
+		if (0 != setsockopt(
+				p->receive_fd, SOL_SOCKET, SO_REUSEADDR,
+				(const char*)&reuse, sizeof(reuse))) {
+			fprintf(stderr, "SO_REUSEADDR error: %d\n", curi_udp_socket_errno());
+		}
+	}
+
 	if (CURI_UDP_FAILED(bind(p->receive_fd, (const struct sockaddr *)&(p->receive_addr), sizeof(p->receive_addr)))) {
 		fprintf(stderr, "bind error: %d\n", curi_udp_socket_errno());
 		return -2;
 	}
+
+	curi_udp_disable_connreset(p->receive_fd);
 
 	p->receive_buffer = (uint8_t*)malloc(buffer_size);
 	if (!p->receive_buffer) {
