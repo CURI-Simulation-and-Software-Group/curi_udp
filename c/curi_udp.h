@@ -62,6 +62,8 @@ int udp_init_share_fd(udp_node* p, const char receive_ip[], int receive_port, co
 int udp_init_receive_fd(udp_node* p, const char receive_ip[], int receive_port, int buffer_size);
 int udp_init_receive_fd1(udp_node* p, const char receive_ip[], int receive_port, int buffer_size, curi_socket_t receive_fd);
 int udp_init_send_fd(udp_node* p, const char send_ip[], int send_port, int buffer_size);
+/** Return the actual bound receive port (including an OS-assigned port after bind(0)). */
+int udp_get_receive_port(const udp_node* p);
 
 int udp_select(udp_node* p, int usec, int buffer_size);
 int udp_select1(udp_node* p, int usec, int buffer_size, struct sockaddr_in* source_addr);

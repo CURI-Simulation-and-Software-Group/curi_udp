@@ -244,18 +244,26 @@ int udp_init_receive_fd1(udp_node* p, const char receive_ip[], int receive_port,
 		return -1;
 	}
 
-	{
-		int reuse = 1;
-		if (0 != setsockopt(
-				p->receive_fd, SOL_SOCKET, SO_REUSEADDR,
-				(const char*)&reuse, sizeof(reuse))) {
-			fprintf(stderr, "SO_REUSEADDR error: %d\n", curi_udp_socket_errno());
-		}
-	}
-
 	if (CURI_UDP_FAILED(bind(p->receive_fd, (const struct sockaddr *)&(p->receive_addr), sizeof(p->receive_addr)))) {
 		fprintf(stderr, "bind error: %d\n", curi_udp_socket_errno());
 		return -2;
+	}
+
+	/* Preserve the port selected by the OS when receive_port is zero. */
+	{
+		struct sockaddr_in bound_addr;
+#if defined(_WIN32) || defined(WIN32)
+		int bound_addr_len = (int)sizeof(bound_addr);
+#else
+		socklen_t bound_addr_len = (socklen_t)sizeof(bound_addr);
+#endif
+		memset(&bound_addr, 0, sizeof(bound_addr));
+		if (getsockname(p->receive_fd, (struct sockaddr*)&bound_addr, &bound_addr_len) != 0) {
+			fprintf(stderr, "getsockname error: %d\n", curi_udp_socket_errno());
+			return -2;
+		}
+		p->receive_addr = bound_addr;
+		p->CURI_RECIVE_PORT = (int)ntohs(bound_addr.sin_port);
 	}
 
 	curi_udp_disable_connreset(p->receive_fd);
@@ -271,6 +279,12 @@ int udp_init_receive_fd1(udp_node* p, const char receive_ip[], int receive_port,
 
 	FD_ZERO(&(p->rset));
 	return 0;
+}
+
+int udp_get_receive_port(const udp_node* p)
+{
+	if (!p || CURI_UDP_IS_INVALID_FD(p->receive_fd)) return -1;
+	return p->CURI_RECIVE_PORT;
 }
 
 int udp_init_send_fd(udp_node* p, const char send_ip[], int send_port, int buffer_size)
@@ -412,14 +426,23 @@ void udp_close(udp_node* p)
 		p->send_buffer = NULL;
 	}
 
-	if (!CURI_UDP_IS_INVALID_FD(p->receive_fd)) {
+	int had_socket = 0;
+	if (!CURI_UDP_IS_INVALID_FD(p->receive_fd) && p->receive_fd == p->send_fd) {
 		CURI_UDP_CLOSE_FD(p->receive_fd);
 		p->receive_fd = CURI_UDP_INVALID_FD;
-		curi_udp_wsa_cleanup();
+		p->send_fd = CURI_UDP_INVALID_FD;
+		had_socket = 1;
+	} else if (!CURI_UDP_IS_INVALID_FD(p->receive_fd)) {
+		CURI_UDP_CLOSE_FD(p->receive_fd);
+		p->receive_fd = CURI_UDP_INVALID_FD;
+		had_socket = 1;
 	}
 	if (!CURI_UDP_IS_INVALID_FD(p->send_fd)) {
 		CURI_UDP_CLOSE_FD(p->send_fd);
 		p->send_fd = CURI_UDP_INVALID_FD;
+		had_socket = 1;
+	}
+	if (had_socket) {
 		curi_udp_wsa_cleanup();
 	}
 }
