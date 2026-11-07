@@ -28,6 +28,7 @@
 	#define CURI_UDP_CLOSE_FD(fd) closesocket(fd)
 	#include <mswsock.h>
 	static int g_wsa_usage_count = 0;
+	static SRWLOCK g_wsa_lock = SRWLOCK_INIT;
 #else
 	#ifndef CURI_UDP_INVALID_FD
 	#define CURI_UDP_INVALID_FD (-1)
@@ -46,13 +47,16 @@
 static int curi_udp_wsa_startup(void)
 {
 #if defined(_WIN32) || defined(WIN32)
+	AcquireSRWLockExclusive(&g_wsa_lock);
 	if (g_wsa_usage_count == 0) {
 		WSADATA wsaData;
 		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+			ReleaseSRWLockExclusive(&g_wsa_lock);
 			return -1;
 		}
 	}
 	g_wsa_usage_count++;
+	ReleaseSRWLockExclusive(&g_wsa_lock);
 #endif
 	return 0;
 }
@@ -60,12 +64,14 @@ static int curi_udp_wsa_startup(void)
 static void curi_udp_wsa_cleanup(void)
 {
 #if defined(_WIN32) || defined(WIN32)
+	AcquireSRWLockExclusive(&g_wsa_lock);
 	if (g_wsa_usage_count > 0) {
 		g_wsa_usage_count--;
 		if (g_wsa_usage_count == 0) {
 			WSACleanup();
 		}
 	}
+	ReleaseSRWLockExclusive(&g_wsa_lock);
 #endif
 }
 
